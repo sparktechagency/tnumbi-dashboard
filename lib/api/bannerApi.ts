@@ -50,10 +50,12 @@ export const bannerApi = createApi({
       invalidatesTags: ['Banner'],
     }),
     
-    updateBannerStatus: builder.mutation<any, string>({
-      query: (id) => ({
-        url: `/banners/status/${id}`,
+    updateBannerStatus: builder.mutation<any, any>({
+      query: (data) => ({
+        url: `/banners/status/${data?.id}`,        
         method: 'PATCH',
+        body:data
+
       }),
       invalidatesTags: ['Banner'],
     }),

@@ -135,7 +135,7 @@ export default function BannerManagement() {
       render: (value: boolean, row: any) => (
         <Switch
           checked={value}
-          onCheckedChange={() => handleStatusChange(row._id)}
+          onCheckedChange={() => handleStatusChange(row)}
           className="data-[state=checked]:bg-green-500"
         />
       ),
@@ -302,9 +302,10 @@ export default function BannerManagement() {
     }
   };
 
-  const handleStatusChange = async (id: string) => {
+  const handleStatusChange = async (record: any) => {
     try {
-      await updateBannerStatus(id).unwrap();
+      
+      await updateBannerStatus({id: record?._id, status: record?.status === false ? true  : false}).unwrap();
       toast({
         title: "Success",
         description: "Banner status updated successfully",
