@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-// export const baseUrl = 'http://10.10.7.41:5003/api/v1';
-// export const imageUrl = 'http://10.10.7.41:5003';
+// export const baseUrl = 'http://10.10.7.41:5000/api/v1';
+// export const imageUrl = 'http://10.10.7.41:5000';
 export const baseUrl = 'https://api.mamacaresitters.com/api/v1';
 export const imageUrl = 'https://api.mamacaresitters.com';
 

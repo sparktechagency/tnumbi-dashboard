@@ -5,7 +5,7 @@ import { baseQueryWithAuth, ApiResponse } from '../baseApi';
 interface CreateBannerData {
   name: string;
   description: string;
-  url: string;
+  url?: string;
   image?: File;
 }
 

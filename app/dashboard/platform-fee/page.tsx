@@ -194,8 +194,8 @@ const PlatformFee = () => {
               </DialogTitle>
               <DialogDescription>
                 {platformFee
-                  ? 'Update the platform fee percentages below.'
-                  : 'Set the platform fee percentages for today and future transactions.'}
+                  ? 'Update the platform fee .'
+                  : 'Set the platform fee for today and future transactions.'}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit}>
@@ -207,7 +207,7 @@ const PlatformFee = () => {
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="Enter fee percentage"
+                    placeholder="Enter fee"
                     value={formData.feeToday}
                     onChange={(e) => handleInputChange('feeToday', e.target.value)}
                     className={errors.feeToday ? 'border-red-500' : ''}
@@ -223,7 +223,7 @@ const PlatformFee = () => {
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="Enter fee percentage"
+                    placeholder="Enter fee"
                     value={formData.feeFuture}
                     onChange={(e) => handleInputChange('feeFuture', e.target.value)}
                     className={errors.feeFuture ? 'border-red-500' : ''}

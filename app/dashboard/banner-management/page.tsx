@@ -40,6 +40,7 @@ import {
   CreateBannerData,
 } from "@/lib/api/bannerApi";
 import { getImageUrl } from "@/components/providers/imageUrl";
+import { imageUrl } from "@/lib/baseApi";
 
 // Form schema
 const bannerFormSchema = z.object({
@@ -55,7 +56,6 @@ export default function BannerManagement() {
   const [editingBanner, setEditingBanner] = useState(null); // null means create mode, object means edit mode
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  console.log("imageFile", imageFile);
 
   // API hooks
   const {
@@ -432,7 +432,8 @@ export default function BannerManagement() {
                   <div className="mt-2">
                     <div className="relative h-40 w-full overflow-hidden rounded-md">
                       <Image
-                        src={previewImage}
+                        // src={`${imageUrl}${previewImage}`}
+                        src={`${previewImage.startsWith('/image') ? `${imageUrl}${previewImage}` : previewImage }`}
                         alt="Preview"
                         fill
                         className="object-contain"

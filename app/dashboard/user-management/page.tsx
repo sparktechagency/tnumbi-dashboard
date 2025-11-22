@@ -21,12 +21,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ChevronLeft, ChevronRight, Search, Trash2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import Swal from 'sweetalert2';
+import { imageUrl } from '@/lib/baseApi';
+import { getImageUrl } from '@/components/providers/imageUrl';
 
 // User interface based on API response
 interface User {
   _id: string;
   name: string;
   email: string;
+  phone: string;
   role: 'PARENT' | 'NANNY';
   status: 'ACTIVE' | 'INACTIVE' | 'BLOCKED';
   profileImage: string;
@@ -342,7 +345,7 @@ export default function UserManagement() {
       render: (_: any, user: User) => (
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
-            <AvatarImage src={user.profileImage} alt={user.name} />
+            <AvatarImage src={getImageUrl(user?.profileImage)} alt={user?.name} />
             <AvatarFallback>
               {user.name.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>
@@ -358,6 +361,12 @@ export default function UserManagement() {
       header: 'Email',
       className: '',
       render: (value: string) => value
+    },
+    {
+      key: 'phone',
+      header: 'Contact',
+      className: '',
+      render: (value: string) => value ?? 'N/A'
     },
     {
       key: 'role',

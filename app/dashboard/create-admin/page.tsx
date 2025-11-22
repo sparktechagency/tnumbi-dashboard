@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useGetAdminsQuery, useCreateAdminMutation, useDeleteAdminMutation } from '@/lib/store';
 import { UserPlus, Shield, Settings, Eye } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { imageUrl } from '@/lib/baseApi';
 
 // Type definitions
 type AdminRole = 'SUPER_ADMIN' | 'ADMIN';
@@ -90,7 +91,7 @@ export default function CreateAdminPage() {
       render: (value: any, admin: Admin) => (
         <div className="flex items-center space-x-3">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={admin.profileImage || ''} alt={admin.name} />
+            <AvatarImage src={`${imageUrl}${admin?.profileImage}` || ''} alt={admin.name} />
             <AvatarFallback>
               {admin.name.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>

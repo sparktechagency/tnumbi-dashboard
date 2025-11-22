@@ -1,3 +1,5 @@
+import { imageUrl } from "@/lib/baseApi";
+
 export const getImageUrl = (path?: string): string => {
   if (!path) {
     return "/assets/image4.png"; // default image
@@ -7,6 +9,6 @@ export const getImageUrl = (path?: string): string => {
     return path;
   }
 
-  const baseUrl = "https://moshfiqur5002.binarybards.online";
-  return `${baseUrl}/${path}`;
+  
+  return `${imageUrl}/${path}`;
 };
