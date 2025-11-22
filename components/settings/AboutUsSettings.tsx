@@ -2,13 +2,19 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import JoditEditor from 'jodit-react';
+import dynamic from 'next/dynamic';
 import { Button } from '../ui/button';
 import { useGetAboutUsQuery, useUpdateAboutUsMutation } from '@/lib/store';
 
+// Load JoditEditor only on client
+const JoditEditor = dynamic(() => import('jodit-react'), {
+  ssr: false,
+});
+
 export function AboutUsSettings() {
   const editor = useRef(null);
-  const { data: aboutData, isLoading, isError, refetch } = useGetAboutUsQuery({});
+  const { data: aboutData, isLoading, isError, refetch } =
+    useGetAboutUsQuery({});
   const [updateAbout] = useUpdateAboutUsMutation();
 
   const [content, setContent] = useState('');
@@ -69,7 +75,9 @@ export function AboutUsSettings() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">Loading...</div>
+    );
   }
 
   if (isError) {
@@ -84,7 +92,9 @@ export function AboutUsSettings() {
     <div className="bg-white h-full p-4 rounded-2xl">
       <div className="mb-6">
         <h1 className="text-2xl text-primary font-semibold">About Us</h1>
-        <p className="text-slate-600 pt-3">Edit your application's About Us content</p>
+        <p className="text-slate-600 pt-3">
+          Edit your application's About Us content
+        </p>
       </div>
 
       <div>
@@ -95,6 +105,7 @@ export function AboutUsSettings() {
           config={config}
           tabIndex={1}
           onBlur={(newContent) => setContent(newContent)}
+          onChange={() => {}} // prevent hydration mismatches
         />
         <div className="flex items-center justify-end gap-4 mt-4">
           <Button

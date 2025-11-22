@@ -2,13 +2,22 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
-import JoditEditor from 'jodit-react';
+import dynamic from 'next/dynamic';
 import { Button } from '../ui/button';
-import { useGetPrivacyPolicyQuery, useUpdatePrivacyPolicyMutation } from '@/lib/store';
+import {
+  useGetPrivacyPolicyQuery,
+  useUpdatePrivacyPolicyMutation,
+} from '@/lib/store';
+
+// Load Jodit only on the client
+const JoditEditor = dynamic(() => import('jodit-react'), {
+  ssr: false,
+});
 
 export function PrivacyPolicySettings() {
   const editor = useRef(null);
-  const { data: privacyData, isLoading, isError, refetch } = useGetPrivacyPolicyQuery({});
+  const { data: privacyData, isLoading, isError, refetch } =
+    useGetPrivacyPolicyQuery({});
   const [updatePrivacy] = useUpdatePrivacyPolicyMutation();
 
   const [content, setContent] = useState('');
@@ -54,7 +63,7 @@ export function PrivacyPolicySettings() {
       'image', 'table', 'link', '|',
       'left', 'center', 'right', 'justify', '|',
       'undo', 'redo', '|',
-      'hr', 'eraser', 'fullsize'
+      'hr', 'eraser', 'fullsize',
     ],
     placeholder: 'Enter your privacy policy here...',
     useSearch: false,
@@ -69,7 +78,9 @@ export function PrivacyPolicySettings() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">Loading...</div>
+    );
   }
 
   if (isError) {
@@ -84,7 +95,9 @@ export function PrivacyPolicySettings() {
     <div className="bg-white h-full p-4 rounded-2xl">
       <div className="mb-6">
         <h1 className="text-2xl text-primary font-semibold">Privacy Policy</h1>
-        <p className="text-slate-600 pt-3">Edit your application's privacy policy</p>
+        <p className="text-slate-600 pt-3">
+          Edit your application's privacy policy
+        </p>
       </div>
 
       <div>
@@ -95,6 +108,7 @@ export function PrivacyPolicySettings() {
           config={config}
           tabIndex={1}
           onBlur={(newContent) => setContent(newContent)}
+          onChange={() => {}} // prevents hydration mismatch
         />
         <div className="flex items-center justify-end gap-4 mt-4">
           <Button
