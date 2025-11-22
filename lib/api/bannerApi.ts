@@ -41,10 +41,9 @@ export const bannerApi = createApi({
     
     updateBanner: builder.mutation<any, UpdateBannerPayload>({
       query: ({ id, formData }) => ({
-        url: `/banner/${id}`,
+        url: `/banners/${id}`,
         method: 'PATCH',
-        body: formData,
-        // CRITICAL: Let browser set Content-Type automatically for FormData
+        body: formData,        
         formData: true,
       }),
       invalidatesTags: ['Banner'],

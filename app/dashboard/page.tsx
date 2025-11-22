@@ -1,8 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
-import { StatCard } from "@/components/ui/stat-card";
 import {
   Card,
   CardContent,
@@ -17,74 +15,59 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Area,
-  AreaChart,
-} from "recharts";
-import {
-  DollarSign,
-  Calendar,
-  Users,
-  TrendingUp,
-  Baby,
-  Heart,
-} from "lucide-react";
-import { set } from "date-fns";
+import { StatCard } from "@/components/ui/stat-card";
 import { useGetDashboardCardDataQuery, useGetDashboardStatsQuery, useTotalRevenueQuery } from "@/lib/store";
+import {
+  Baby,
+  Calendar,
+  DollarSign,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
+import {
+  Area,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from "recharts";
 
 // API data interfaces are defined in the API files
-
 type TimeFilter = "6months" | "1month" | "3months" | "1year";
 
-// Using real API data
+// Get the current year and generate previous years
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 6 }, (_, i) => currentYear - (i + 1));
 
-export default function DashboardOverview() {
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("6months");
-  const [user, setUser] = useState<TimeFilter>("1month");
-  
-  const { data: card, isLoading: cardLoading } = useGetDashboardCardDataQuery({ timeFilter });
+export default function DashboardOverview() {  
+  const [selectedYear, setSelectedYear] = useState(currentYear);
+  const [selectRevYear, setSelectRevYear] = useState(currentYear)
+
+  const { data: card, isLoading: cardLoading } = useGetDashboardCardDataQuery({ year: selectedYear });
   const cardData = card?.data;
 
-
-  const { data: stats, isLoading: statsLoading } = useGetDashboardStatsQuery({ timeFilter });
+  const { data: stats, isLoading: statsLoading } = useGetDashboardStatsQuery({ year: selectedYear });
   const userData = stats?.data;
-  const { data: revenueData } = useTotalRevenueQuery({ timeFilter });
+
+  const { data: revenueData } = useTotalRevenueQuery({ year: selectRevYear } );
   const revenue = revenueData?.data;
 
-
+  console.log('selectRevYear', selectRevYear.toString())
   return (
     <DashboardLayout>
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Dashboard Overview
-            </h1>
-            <p className="text-gray-600">
-              Welcome back! Here`s what`s happening with your platform.
-            </p>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
+            <p className="text-gray-600">Welcome back! Here`s what`s happening with your platform.</p>
           </div>
-          <Select value={timeFilter} onValueChange={(value: TimeFilter) => setTimeFilter(value)}>
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1month">Last Month</SelectItem>
-              <SelectItem value="3months">Last 3 Months</SelectItem>
-              <SelectItem value="6months">Last 6 Months</SelectItem>
-              <SelectItem value="1year">Last Year</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Stats Cards */}
@@ -94,7 +77,6 @@ export default function DashboardOverview() {
             value={`$${cardData?.totalRevenue?.toLocaleString() || '0'}`}
             changeType="increase"
             icon={DollarSign}
-           
           />
           <StatCard
             title="Total Bookings"
@@ -120,31 +102,31 @@ export default function DashboardOverview() {
         <div className="grid grid-cols-1 gap-6">
           {/* User Distribution Chart */}
           <Card>
-            <CardHeader >
+            <CardHeader>
               <div className="flex justify-between items-center">
                 <div>
-                <CardTitle className="flex items-center">
-                  <Users className="mr-2 h-5 w-5" />
-                  Users Overview
-                </CardTitle>
-                <CardDescription>
-                  Monthly distribution of mothers and nannies
-                </CardDescription>
-              </div>
+                  <CardTitle className="flex items-center">
+                    <Users className="mr-2 h-5 w-5" />
+                    Users Overview
+                  </CardTitle>
+                  <CardDescription>
+                    Monthly distribution of mothers and nannies
+                  </CardDescription>
+                </div>
 
-              <div>
-                <Select value={user} onValueChange={(value: TimeFilter) => setUser(value)}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1month">Last Month</SelectItem>
-                    <SelectItem value="3months">Last 3 Months</SelectItem>
-                    <SelectItem value="6months">Last 6 Months</SelectItem>
-                    <SelectItem value="1year">Last Year</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(Number(value))}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={currentYear.toString()}>{`Current Year (${new Date().getFullYear()})`}</SelectItem>
+                      {years?.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -164,13 +146,28 @@ export default function DashboardOverview() {
           {/* Revenue Trend Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <TrendingUp className="mr-2 h-5 w-5" />
-                Revenue & Bookings Trend
-              </CardTitle>
-              <CardDescription>
-                Monthly revenue and booking trends
-              </CardDescription>
+              <div className="flex justify-between items-center">
+                <div className="">
+                  <CardTitle className="flex items-center">
+                    <TrendingUp className="mr-2 h-5 w-5" />
+                    Revenue & Bookings Trend
+                  </CardTitle>
+                  <CardDescription>
+                    Monthly revenue and booking trends
+                  </CardDescription>
+                </div>
+                <Select value={selectRevYear.toString()} onValueChange={(value) => setSelectRevYear(Number(value))}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={currentYear.toString()}>{`Current Year (${new Date().getFullYear()})`}</SelectItem>
+                    {years?.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>

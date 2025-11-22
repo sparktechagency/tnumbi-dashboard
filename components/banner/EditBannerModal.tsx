@@ -160,10 +160,7 @@ export function EditBannerModal({ isOpen, onClose, banner, onSuccess }: EditBann
 
       const formData = new FormData();
       formData.append("id", banner._id);
-      formData.append("name", values.name);
-      formData.append("description", values.description);
-      formData.append("url", values.url);
-      
+      formData.append("data", JSON.stringify(values));            
       if (imageFile) {
         formData.append("image", imageFile);
       }
