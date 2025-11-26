@@ -11,6 +11,7 @@ import { galleryApi } from './api/galleryApi';
 import { bannerApi } from './api/bannerApi';
 import { settingsApi } from './api/settingsApi';
 import { platformFeeApi } from './api/platformFeeApi';
+import { verifyApi } from './api/verifyApi';
 
 // Type definitions
 interface User {
@@ -38,6 +39,7 @@ interface RootState {
   [bannerApi.reducerPath]: ReturnType<typeof bannerApi.reducer>;
   [settingsApi.reducerPath]: ReturnType<typeof settingsApi.reducer>;
   [platformFeeApi.reducerPath]: ReturnType<typeof platformFeeApi.reducer>;
+  [verifyApi.reducerPath]: ReturnType<typeof verifyApi.reducer>;
 }
 
 // Auth slice
@@ -96,6 +98,7 @@ export const store = configureStore({
     [bannerApi.reducerPath]: bannerApi.reducer,
     [settingsApi.reducerPath]: settingsApi.reducer,
     [platformFeeApi.reducerPath]: platformFeeApi.reducer,
+    [verifyApi.reducerPath]: verifyApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -109,6 +112,7 @@ export const store = configureStore({
       bannerApi.middleware,
       settingsApi.middleware,
       platformFeeApi.middleware,
+      verifyApi.middleware,
     ),
 });
 

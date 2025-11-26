@@ -16,7 +16,8 @@ import {
   LogOut,
   LucideIcon,   
   DessertIcon,
-  DollarSign
+  DollarSign,
+  UserCheck
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { logout } from '@/lib/store';
@@ -35,9 +36,9 @@ const menuItems: MenuItem[] = [
   { icon: Users, label: 'User Management', href: '/dashboard/user-management' },
   { icon: FileText, label: 'Reports', href: '/dashboard/report' },
   { icon: UserPlus, label: 'Create Admin', href: '/dashboard/create-admin' },
-  { icon: UserPlus, label: 'Verify', href: '/dashboard/create-admin' },
+  { icon: UserCheck, label: 'Background Check', href: '/dashboard/background-check' },
   { icon: DessertIcon, label: 'Banner Management', href: '/dashboard/banner-management' },
-  { icon: DollarSign, label: 'Platform Fee', href: '/dashboard/platform-fee' },
+  { icon: DollarSign, label: 'Fee Manage', href: '/dashboard/fee-manage' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 

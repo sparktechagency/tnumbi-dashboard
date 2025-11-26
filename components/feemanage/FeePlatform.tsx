@@ -1,6 +1,5 @@
-"use client";
+'use client'
 
-import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,94 +25,94 @@ interface PlatformFeeData {
   updatedAt: string;
 }
 
-const PlatformFee = () => {
-  const { data: platformFeeResponse, isLoading, refetch } = useGetPlatformFeeQuery({});
-  console.log("platformFeeResponse", platformFeeResponse);
-  const platformFee = platformFeeResponse?.data as PlatformFeeData | undefined;
-  
-  const [createPlatformFee, { isLoading: isCreating }] = useCreatePlatformFeeMutation();
+const FeePlatform = () => {
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    feeToday: '',
-    feeFuture: '',
-  });
-  const [errors, setErrors] = useState({
-    feeToday: '',
-    feeFuture: '',
-  });
-
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!isModalOpen) {
-      setFormData({ feeToday: '', feeFuture: '' });
-      setErrors({ feeToday: '', feeFuture: '' });
-    }
-  }, [isModalOpen]);
-
-  const handleOpenModal = () => {
-    if (platformFee) {
-      setFormData({
-        feeToday: platformFee.feeToday.toString(),
-        feeFuture: platformFee.feeFuture.toString(),
+     const { data: platformFeeResponse, isLoading, refetch } = useGetPlatformFeeQuery({});
+      console.log("platformFeeResponse", platformFeeResponse);
+      const platformFee = platformFeeResponse?.data as PlatformFeeData | undefined;
+      
+      const [createPlatformFee, { isLoading: isCreating }] = useCreatePlatformFeeMutation();
+    
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const [formData, setFormData] = useState({
+        feeToday: '',
+        feeFuture: '',
       });
-    } else {
-      setFormData({ feeToday: '', feeFuture: '' });
-    }
-    setIsModalOpen(true);
-  };
-
-  const validateForm = () => {
-    const newErrors = { feeToday: '', feeFuture: '' };
-    let isValid = true;
-
-    if (!formData.feeToday || parseFloat(formData.feeToday) < 0) {
-      newErrors.feeToday = 'Please enter a valid fee for today';
-      isValid = false;
-    }
-
-    if (!formData.feeFuture || parseFloat(formData.feeFuture) < 0) {
-      newErrors.feeFuture = 'Please enter a valid fee for future';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) return;
-
-    try {
-      const payload = {
-        feeToday: parseFloat(formData.feeToday),
-        feeFuture: parseFloat(formData.feeFuture),
-        ...(platformFee && { id: platformFee._id }),
+      const [errors, setErrors] = useState({
+        feeToday: '',
+        feeFuture: '',
+      });
+    
+      // Reset form when modal closes
+      useEffect(() => {
+        if (!isModalOpen) {
+          setFormData({ feeToday: '', feeFuture: '' });
+          setErrors({ feeToday: '', feeFuture: '' });
+        }
+      }, [isModalOpen]);
+    
+      const handleOpenModal = () => {
+        if (platformFee) {
+          setFormData({
+            feeToday: platformFee.feeToday.toString(),
+            feeFuture: platformFee.feeFuture.toString(),
+          });
+        } else {
+          setFormData({ feeToday: '', feeFuture: '' });
+        }
+        setIsModalOpen(true);
+      };
+    
+      const validateForm = () => {
+        const newErrors = { feeToday: '', feeFuture: '' };
+        let isValid = true;
+    
+        if (!formData.feeToday || parseFloat(formData.feeToday) < 0) {
+          newErrors.feeToday = 'Please enter a valid fee for today';
+          isValid = false;
+        }
+    
+        if (!formData.feeFuture || parseFloat(formData.feeFuture) < 0) {
+          newErrors.feeFuture = 'Please enter a valid fee for future';
+          isValid = false;
+        }
+    
+        setErrors(newErrors);
+        return isValid;
+      };
+    
+      const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+    
+        if (!validateForm()) return;
+    
+        try {
+          const payload = {
+            feeToday: parseFloat(formData.feeToday),
+            feeFuture: parseFloat(formData.feeFuture),
+            ...(platformFee && { id: platformFee._id }),
+          };
+    
+          await createPlatformFee(payload).unwrap();
+    
+          toast.success(`Platform fee ${platformFee ? 'updated' : 'created'} successfully`);
+    
+          setIsModalOpen(false);
+          refetch();
+        } catch (error: any) {
+          toast.error(error?.data?.message || `Failed to ${platformFee ? 'update' : 'create'} platform fee`);
+        }
+      };
+    
+      const handleInputChange = (field: 'feeToday' | 'feeFuture', value: string) => {
+        setFormData((prev) => ({ ...prev, [field]: value }));
+        if (errors[field]) {
+          setErrors((prev) => ({ ...prev, [field]: '' }));
+        }
       };
 
-      await createPlatformFee(payload).unwrap();
-
-      toast.success(`Platform fee ${platformFee ? 'updated' : 'created'} successfully`);
-
-      setIsModalOpen(false);
-      refetch();
-    } catch (error: any) {
-      toast.error(error?.data?.message || `Failed to ${platformFee ? 'update' : 'create'} platform fee`);
-    }
-  };
-
-  const handleInputChange = (field: 'feeToday' | 'feeFuture', value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: '' }));
-    }
-  };
-
   return (
-    <DashboardLayout>
-      <div className="p-6 mt-10">
+          <div className="p-6 mt-10">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800">Platform Fee Management</h2>
         </div>
@@ -257,8 +256,7 @@ const PlatformFee = () => {
           </DialogContent>
         </Dialog>
       </div>
-    </DashboardLayout>
-  );
-};
+  )
+}
 
-export default PlatformFee;
+export default FeePlatform
