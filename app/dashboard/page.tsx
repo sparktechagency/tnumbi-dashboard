@@ -136,7 +136,7 @@ export default function DashboardOverview() {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="totalParents" fill="#CD671C" name="Mothers" />
+                  <Bar dataKey="totalParents" fill="#CD671C" name="Parents" />
                   <Bar dataKey="totalNannies" fill="#F59E0B" name="Nannies" />
                 </BarChart>
               </ResponsiveContainer>

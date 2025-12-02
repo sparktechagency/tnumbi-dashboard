@@ -31,14 +31,14 @@ interface MenuItem {
 
 const menuItems: MenuItem[] = [
   { icon: BarChart3, label: 'Overview', href: '/dashboard' },
+  { icon: Users, label: 'User Management', href: '/dashboard/user-management' },
   { icon: Calendar, label: 'Booking Management', href: '/dashboard/booking-management' },
   { icon: DollarSign, label: 'Transaction', href: '/dashboard/transaction-management' },
-  { icon: Users, label: 'User Management', href: '/dashboard/user-management' },
-  { icon: FileText, label: 'Reports', href: '/dashboard/report' },
-  { icon: UserPlus, label: 'Create Admin', href: '/dashboard/create-admin' },
   { icon: UserCheck, label: 'Background Check', href: '/dashboard/background-check' },
   { icon: DessertIcon, label: 'Banner Management', href: '/dashboard/banner-management' },
-  { icon: DollarSign, label: 'Fee Manage', href: '/dashboard/fee-manage' },
+  { icon: UserPlus, label: 'Create Admin', href: '/dashboard/create-admin' },
+  { icon: DollarSign, label: 'Fee Managemant', href: '/dashboard/fee-manage' },
+  { icon: FileText, label: 'Reports', href: '/dashboard/report' },
   { icon: Settings, label: 'Settings', href: '/dashboard/settings' },
 ];
 
