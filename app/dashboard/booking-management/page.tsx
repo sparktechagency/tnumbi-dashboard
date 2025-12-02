@@ -12,11 +12,52 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useGetBookingsQuery } from '@/lib/store';
 import { Calendar, Clock, User, MapPin, DollarSign, ChevronLeft, ChevronRight, Search, Eye } from 'lucide-react';
 
+// ==========================================
+// TYPES
+// ==========================================
 type BookingStatus = 'completed' | 'confirmed' | 'pending' | 'cancelled';
 
-interface Booking {
+export interface ITimeSlot {
+  date: string;
+  startTime: string;
+  durationInHours: number;
+  surcharge?: number;
+  surchargeHours?: number;
+}
+
+type TNannyServiceRate = {
+  nannyId: string;
+  hourlyRate: number;
+  dayRate: number;
+  currency: string;
+  acceptsOverNight?: Boolean;
+  overNightHourlyRate?: number;
+};
+
+export type TBooking = {
+  _id: string;
+  parentId: string;
+  nannyId: string;
+  childrenId: string[];
+
+  bookingType: 'HOURLY' | 'FULL_DAY' | 'CUSTOM' | 'OVERNIGHT';
+  bookingStatus?: 'PENDING' | 'PAID' | 'REFUNDED';
+
+  serviceRate?: TNannyServiceRate;
+  totalPayable?: number;
+
+  hourlyBooking?: { slots: ITimeSlot[] };
+  fullDayBooking?: { startDate: string; endDate: string; fullDays: string[] };
+  customBooking?: { startDate: string; endDate: string; fullDays: string[] }[];
+  overnightBooking?: ITimeSlot;
+
+  parent?: { name: string };
+  nanny?: { name: string };
+};
+
+export type TBookingRow = {
   id: string;
-  motherName: string;
+  parentsName: string;
   nannyName: string;
   date: string;
   time: string;
@@ -25,32 +66,38 @@ interface Booking {
   amount: number;
   location: string;
   services: string[];
-}
+};
 
+// ==========================================
+// STATUS COLORS
+// ==========================================
 const statusColors: Record<BookingStatus, string> = {
   completed: 'bg-green-100 text-green-800',
   confirmed: 'bg-blue-100 text-blue-800',
   pending: 'bg-yellow-100 text-yellow-800',
-  cancelled: 'bg-red-100 text-red-800'
+  cancelled: 'bg-red-100 text-red-800',
 };
 
-const mapApiStatus = (apiStatus: string): BookingStatus => {
-  const statusMap: Record<string, BookingStatus> = {
-    'COMPLETED': 'completed',
-    'CONFIRMED': 'confirmed',
-    'PENDING': 'pending',
-    'CANCELLED': 'cancelled'
+const mapApiStatus = (apiStatus: string = ''): BookingStatus => {
+  const map: Record<string, BookingStatus> = {
+    COMPLETED: 'completed',
+    CONFIRMED: 'confirmed',
+    PENDING: 'pending',
+    CANCELLED: 'cancelled',
   };
-  return statusMap[apiStatus] || 'pending';
+  return map[apiStatus] || 'pending';
 };
 
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
 export default function BookingManagement() {
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<TBookingRow | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [searchText, setSearchText] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [perPage] = useState<number>(10);
+  const perPage = 10;
 
   // Build query params
   const queryParams: Array<{ name: string; value: string }> = [
@@ -61,33 +108,67 @@ export default function BookingManagement() {
   if (searchText.trim()) {
     queryParams.push({ name: "searchTerm", value: searchText.trim() });
   }
-  
-  if (statusFilter && statusFilter !== "all") {
+  if (statusFilter !== "all") {
     queryParams.push({ name: "bookingStatus", value: statusFilter.toUpperCase() });
   }
 
   const { data: bookings, isLoading, isFetching } = useGetBookingsQuery(queryParams);
-  const bookingData = bookings?.data?.data || [];
+
+  const rawBookings: TBooking[] = bookings?.data?.data || [];
   const totalPages = bookings?.data?.meta?.totalPage || 1;
   const totalItems = bookings?.data?.meta?.total || 0;
-  console.log(bookings)
 
-  // Transform API data
-  const transformedBookings: Booking[] = bookingData.map((booking: any) => ({
-    id: booking._id,
-    motherName: booking.parent?.name || 'N/A',
-    nannyName: booking.nanny?.name || 'N/A',
-    date: booking.hourlyBooking?.date || booking.fullDayBooking?.fullDays?.[0] || 'N/A',
-    time: booking.hourlyBooking?.startTime || 'N/A',
-    duration: booking.hourlyBooking ? 
-      `${booking.hourlyBooking.startTime} - ${booking.hourlyBooking.endTime}` : 
-      'Full Day',
-    status: mapApiStatus(booking.bookingStatus),
-    amount: booking.totalPayable || 0,
-    location: 'N/A',
-    services: [booking.bookingType || 'Standard Care']
-  }));
+  // ==========================================
+  // TRANSFORM API → TABLE-FRIENDLY
+  // ==========================================
+  const transformedBookings: TBookingRow[] = rawBookings.map((b) => {
+    let date = "N/A";
+    let time = "N/A";
+    let duration = "N/A";
 
+    if (b.hourlyBooking?.slots?.length) {
+      
+      const s = b.hourlyBooking?.slots[0];
+      date = s?.date;
+      time = s?.startTime;
+      duration = `${s.startTime} (${s.durationInHours} hrs)`;
+    }
+
+    if (b.fullDayBooking?.fullDays?.length) {
+      date = b.fullDayBooking.fullDays[0] || b.fullDayBooking.startDate;
+      time = "Full Day";
+      duration = "Full Day";
+    }
+
+    if (b.customBooking?.length) {
+      date = b.customBooking[0].startDate;
+      time = "Custom Slot";
+      duration = "Custom Day(s)";
+    }
+
+    if (b.overnightBooking) {
+      date = b.overnightBooking.date;
+      time = b.overnightBooking.startTime;
+      duration = `${b.overnightBooking.durationInHours} hrs (Overnight)`;
+    }
+
+    return {
+      id: b._id,
+      parentsName: b.parent?.name || "N/A",
+      nannyName: b.nanny?.name || "N/A",
+      date,
+      time,
+      duration,
+      status: mapApiStatus(b.bookingStatus),
+      amount: b.totalPayable || 0,
+      location: "N/A",
+      services: [b.bookingType],
+    };
+  });
+
+  // ==========================================
+  // HANDLERS
+  // ==========================================
   const handleSearch = (value: string) => {
     setSearchText(value);
     setCurrentPage(1);
@@ -98,11 +179,19 @@ export default function BookingManagement() {
     setCurrentPage(1);
   };
 
-  const handleViewDetails = (booking: Booking) => {
-    setSelectedBooking(booking);
+  const handleViewDetails = (data: TBookingRow) => {
+    setSelectedBooking(data);
     setIsDetailsOpen(true);
   };
 
+  const formatDate = (d: string) => {
+    if (!d || d === "N/A") return "N/A";
+    return new Date(d).toLocaleDateString();
+  };
+
+  // ==========================================
+  // UI
+  // ==========================================
   return (
     <DashboardLayout>
       <div className="p-6">
@@ -112,11 +201,12 @@ export default function BookingManagement() {
         </div>
 
         <Card>
-          <CardContent className='mt-6'>
-            {/* Search and Filter */}
+          <CardContent className="mt-6">
+
+            {/* Search + Filter */}
             <div className="flex items-center gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   placeholder="Search by mother name..."
                   value={searchText}
@@ -124,7 +214,7 @@ export default function BookingManagement() {
                   className="pl-10 w-1/3"
                 />
               </div>
-              
+
               <Select value={statusFilter} onValueChange={handleStatusFilter}>
                 <SelectTrigger className="w-[200px]">
                   <SelectValue placeholder="Filter by status" />
@@ -139,47 +229,42 @@ export default function BookingManagement() {
               </Select>
             </div>
 
+            {/* TABLE */}
             {isLoading ? (
               <div className="text-center py-8">Loading bookings...</div>
             ) : transformedBookings.length === 0 ? (
               <div className="text-center py-8 text-gray-500">No bookings found</div>
             ) : (
               <>
-                {/* Table */}
                 <div className="border rounded-lg overflow-hidden">
                   <Table>
-                    <TableHeader className='bg-[#cd671c] text-white'>
+                    <TableHeader className="bg-[#cd671c] text-white">
                       <TableRow>
                         <TableHead>Booking ID</TableHead>
                         <TableHead>Parent</TableHead>
                         <TableHead>Nanny</TableHead>
                         <TableHead>Date</TableHead>
-                        <TableHead>Time</TableHead>
                         <TableHead className="text-right">Amount</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-center">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
+
                     <TableBody>
-                      {transformedBookings.map((booking) => (
-                        <TableRow key={booking.id}>
-                          <TableCell className="font-medium">{booking.id}</TableCell>
-                          <TableCell>{booking.motherName}</TableCell>
-                          <TableCell>{booking.nannyName}</TableCell>
-                          <TableCell>{new Date(booking.date).toLocaleDateString()}</TableCell>
-                          <TableCell>{booking.time}</TableCell>
-                          <TableCell className="text-right font-medium">${booking.amount}</TableCell>
+                      {transformedBookings.map((b) => (
+                        <TableRow key={b.id}>
+                          <TableCell className="font-medium">{b.id}</TableCell>
+                          <TableCell>{b.parentsName}</TableCell>
+                          <TableCell>{b.nannyName}</TableCell>
+                          <TableCell>{formatDate(b.date)}</TableCell>
+                          <TableCell className="text-right font-medium">${b.amount}</TableCell>
                           <TableCell>
-                            <Badge className={statusColors[booking.status]}>
-                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            <Badge className={statusColors[b.status]}>
+                              {b.status.charAt(0).toUpperCase() + b.status.slice(1)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleViewDetails(booking)}
-                            >
+                            <Button variant="ghost" size="sm" onClick={() => handleViewDetails(b)}>
                               <Eye className="h-4 w-4" />
                             </Button>
                           </TableCell>
@@ -189,55 +274,52 @@ export default function BookingManagement() {
                   </Table>
                 </div>
 
-                {/* Pagination - Only show if totalPages > 1 */}
+                {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-6 pt-4 border-t">
                     <div className="text-sm text-gray-600">
                       Showing {((currentPage - 1) * perPage) + 1} to {Math.min(currentPage * perPage, totalItems)} of {totalItems} bookings
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(currentPage - 1)}
+                        onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                         disabled={currentPage === 1 || isFetching}
                       >
                         <ChevronLeft className="h-4 w-4" />
                         Previous
                       </Button>
-                      
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                          let pageNum;
-                          if (totalPages <= 5) {
-                            pageNum = i + 1;
-                          } else if (currentPage <= 3) {
-                            pageNum = i + 1;
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i;
-                          } else {
-                            pageNum = currentPage - 2 + i;
-                          }
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={currentPage === pageNum ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setCurrentPage(pageNum)}
-                              disabled={isFetching}
-                              className="min-w-[40px]"
-                            >
-                              {pageNum}
-                            </Button>
-                          );
-                        })}
-                      </div>
-                      
+
+                      {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                        let pageNum =
+                          totalPages <= 5
+                            ? i + 1
+                            : currentPage <= 3
+                            ? i + 1
+                            : currentPage >= totalPages - 2
+                            ? totalPages - 4 + i
+                            : currentPage - 2 + i;
+
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={currentPage === pageNum ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setCurrentPage(pageNum)}
+                            disabled={isFetching}
+                            className="min-w-[40px]"
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => setCurrentPage(currentPage + 1)}
+                        onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                         disabled={currentPage === totalPages || isFetching}
                       >
                         Next
@@ -251,7 +333,7 @@ export default function BookingManagement() {
           </CardContent>
         </Card>
 
-        {/* Booking Details Modal */}
+        {/* DETAILS MODAL */}
         <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
@@ -260,18 +342,20 @@ export default function BookingManagement() {
                 Complete information about booking {selectedBooking?.id}
               </DialogDescription>
             </DialogHeader>
-            
+
             {selectedBooking && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {/* LEFT */}
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <User className="h-5 w-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-600">Mother</p>
-                      <p className="font-medium">{selectedBooking.motherName}</p>
+                      <p className="font-medium">{selectedBooking.parentsName}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <User className="h-5 w-5 text-gray-400" />
                     <div>
@@ -279,17 +363,18 @@ export default function BookingManagement() {
                       <p className="font-medium">{selectedBooking.nannyName}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-5 w-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-600">Date & Time</p>
                       <p className="font-medium">
-                        {new Date(selectedBooking.date).toLocaleDateString()} at {selectedBooking.time}
+                        {formatDate(selectedBooking.date)}{" "}
+                        {selectedBooking.time !== "N/A" && `at ${selectedBooking.time}`}
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <Clock className="h-5 w-5 text-gray-400" />
                     <div>
@@ -298,7 +383,8 @@ export default function BookingManagement() {
                     </div>
                   </div>
                 </div>
-                
+
+                {/* RIGHT */}
                 <div className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-5 w-5 text-gray-400" />
@@ -307,7 +393,7 @@ export default function BookingManagement() {
                       <p className="font-medium">{selectedBooking.location}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <DollarSign className="h-5 w-5 text-gray-400" />
                     <div>
@@ -315,29 +401,31 @@ export default function BookingManagement() {
                       <p className="font-medium text-lg">${selectedBooking.amount}</p>
                     </div>
                   </div>
-                  
+
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Status</p>
                     <Badge className={statusColors[selectedBooking.status]}>
                       {selectedBooking.status.charAt(0).toUpperCase() + selectedBooking.status.slice(1)}
                     </Badge>
                   </div>
-                  
+
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Services</p>
                     <div className="flex flex-wrap gap-2">
-                      {selectedBooking.services.map((service, index) => (
-                        <Badge key={index} variant="outline">
-                          {service}
+                      {selectedBooking.services.map((s, i) => (
+                        <Badge key={i} variant="outline">
+                          {s}
                         </Badge>
                       ))}
                     </div>
                   </div>
                 </div>
+
               </div>
             )}
           </DialogContent>
         </Dialog>
+
       </div>
     </DashboardLayout>
   );
